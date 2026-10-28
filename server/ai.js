@@ -248,7 +248,14 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     : apiKey.startsWith('nvapi-')
     ? 'meta/llama-3.2-11b-vision-instruct'
     : 'gemini-2.0-flash';
-  const model = process.env.AI_MODEL || defaultModel;
+  let model = process.env.AI_MODEL || defaultModel;
+
+  if (apiKey.startsWith('gsk_')) {
+    // Force qwen/qwen3.8-27b on Groq because experimental reasoning models fail JSON grammar validation
+    if (!model || model.includes('llama') || model.includes('120b') || model === 'default') {
+      model = 'qwen/qwen3.8-27b';
+    }
+  }
 
   if (!apiKey || !apiKey.trim()) {
     throw new Error('AI_API_KEY_MISSING');

@@ -34,26 +34,46 @@ function validateQuestionItem(q, idx, fallbackTopicId = 't-default') {
 
   const id = q.id ? String(q.id) : `q-${idx + 1}`;
   const topicId = q.topicId ? String(q.topicId) : fallbackTopicId;
-  const question = typeof q.question === 'string' ? q.question.trim() : '';
-  const explanation = typeof q.explanation === 'string' ? q.explanation.trim() : '';
-  const conceptTag = typeof q.conceptTag === 'string' ? q.conceptTag.trim() : 'General';
+  const question = typeof q.question === 'string' ? q.question.trim() : (q.q ? String(q.q).trim() : '');
+  const explanation = typeof q.explanation === 'string' ? q.explanation.trim() : (q.reason ? String(q.reason).trim() : '');
+  const conceptTag = typeof q.conceptTag === 'string' ? q.conceptTag.trim() : (q.concept ? String(q.concept).trim() : 'General');
 
   if (!question) {
     return { valid: false, error: `Question at index ${idx} is missing question text` };
   }
 
   // Must have exactly 4 options
-  let options = q.options;
-  if (!Array.isArray(options) || options.length !== 4) {
+  let rawOpts = Array.isArray(q.options) ? q.options : (Array.isArray(q.choices) ? q.choices : []);
+  if (!Array.isArray(rawOpts) || rawOpts.length !== 4) {
     return { valid: false, error: `Question at index ${idx} must have exactly 4 options` };
   }
-  options = options.map((opt) => String(opt || '').trim());
+  let options = rawOpts.map((opt) => String(opt || '').trim());
   if (options.some((opt) => opt.length === 0)) {
     return { valid: false, error: `Question at index ${idx} has empty option string` };
   }
 
-  // Correct index must be 0..3
-  const correctIndex = Number(q.correctIndex);
+  // Correct index resolution: support correctIndex, answer, correctAnswer, correct_answer, letters A-D, or option string matches
+  let rawIdx = q.correctIndex ?? q.answer ?? q.correctAnswer ?? q.correct_answer ?? q.correct;
+  let correctIndex = 0;
+
+  if (typeof rawIdx === 'number') {
+    correctIndex = rawIdx;
+  } else if (typeof rawIdx === 'string') {
+    const trimmed = rawIdx.trim().toLowerCase();
+    const letterMap = { a: 0, b: 1, c: 2, d: 3 };
+    if (letterMap[trimmed] !== undefined) {
+      correctIndex = letterMap[trimmed];
+    } else {
+      const parsedNum = parseInt(trimmed, 10);
+      if (!isNaN(parsedNum) && parsedNum >= 0 && parsedNum <= 3) {
+        correctIndex = parsedNum;
+      } else {
+        const matchIdx = options.findIndex((opt) => opt.toLowerCase() === rawIdx.trim().toLowerCase());
+        correctIndex = matchIdx !== -1 ? matchIdx : 0;
+      }
+    }
+  }
+
   if (isNaN(correctIndex) || correctIndex < 0 || correctIndex > 3) {
     return { valid: false, error: `Question at index ${idx} correctIndex must be an integer between 0 and 3` };
   }
@@ -144,7 +164,9 @@ export function validateQuiz(raw, expectedTopicId = 't-default') {
     return { isValid: false, error: 'Quiz response must be a JSON object' };
   }
 
-  const rawQuestions = Array.isArray(raw) ? raw : raw.questions;
+  const rawQuestions = Array.isArray(raw)
+    ? raw
+    : (raw.questions || raw.quiz || raw.data || raw.items || []);
   if (!Array.isArray(rawQuestions) || rawQuestions.length === 0) {
     return { isValid: false, error: 'Quiz response must contain a non-empty questions array' };
   }
