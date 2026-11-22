@@ -120,39 +120,46 @@ app.post('/api/extract', async (req, res) => {
     return res.status(400).json({ error: 'Missing or invalid "text" field' });
   }
 
-  const systemPrompt = `You extract study deadlines and topics from messy student text. Today is ${todayStr}. Resolve relative dates to YYYY-MM-DD. If a date is ambiguous, set dueDate to null and add a warning. Never invent deadlines. Return only JSON matching the schema.
+  const systemPrompt = `You extract study deadlines and topics from student text. Today is ${todayStr}. Return ONLY valid JSON matching this exact schema. No markdown, no explanations.
 
-Schema shape:
+Required JSON structure:
 {
   "deadlines": [
     {
       "id": "d-1",
-      "title": "Assignment title",
-      "type": "assignment" | "exam" | "lab" | "test" | "other",
-      "subject": "Course name",
-      "dueDate": "YYYY-MM-DD" or null,
-      "confidence": 0.0 to 1.0,
-      "sourceSnippet": "exact short quote from text"
+      "title": "CS101 Midterm Exam",
+      "type": "exam",
+      "subject": "CS101",
+      "dueDate": "2025-03-15",
+      "confidence": 0.95,
+      "sourceSnippet": "CS101 midterm on March 15th"
     }
   ],
   "topics": [
     {
       "id": "t-1",
-      "subject": "Course name",
-      "name": "Topic name",
-      "weight": 1 to 5,
-      "difficulty": 1 to 5,
-      "examDate": "YYYY-MM-DD" or null,
+      "subject": "CS101",
+      "name": "Midterm Exam",
+      "weight": 4,
+      "difficulty": 4,
+      "examDate": "2025-03-15",
       "mastery": 0.3
     }
   ],
-  "warnings": ["string warning if any dates were ambiguous"]
-}`;
+  "warnings": []
+}
+
+Rules:
+- type must be: assignment, exam, lab, test, or other
+- dueDate must be YYYY-MM-DD or null
+- confidence 0.0-1.0
+- weight 1-5, difficulty 1-5, mastery 0.0-1.0
+- sourceSnippet: exact quote from input text`;`;
 
   try {
     const data = await callAIWithValidation({
       systemPrompt,
-      userPrompt: `Extract deadlines and topics from this input:\n\n${text}`,
+      userPrompt: `Input text:\n${text}`,
       validator: validateExtract
     });
 
