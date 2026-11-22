@@ -261,7 +261,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
   const defaultModel = apiKey.startsWith('gsk_')
     ? 'qwen/qwen3.8-27b'
     : apiKey.startsWith('nvapi-')
-      ? 'nvidia/nemotron-3-ultra-550b-a55b'
+        ? 'z-ai/glm-5.3-flash'
     : 'gemini-2.0-flash';
   const model = process.env.AI_MODEL || defaultModel;
 
