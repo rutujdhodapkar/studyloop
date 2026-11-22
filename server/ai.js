@@ -27,7 +27,7 @@ export function stripFences(text) {
  */
 async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 50000);
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for faster failover
 
   try {
     // 1. Groq Provider (keys starting with gsk_)
@@ -51,8 +51,8 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
           }
         ],
         response_format: { type: 'json_object' },
-        max_tokens: 750,
-        temperature: 0.2
+        max_tokens: 500, // Reduced for speed
+        temperature: 0.1 // Lower for faster, more deterministic output
       };
 
       let response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -138,9 +138,10 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
               content: userPrompt
             }
           ],
-          max_tokens: 1500,
+              max_tokens: 800, // Reduced for speed
               temperature: 0.1,
-              ...(isNemotron ? { top_p: 0.95 } : {})
+              ...(isNemotron ? { top_p: 0.95 } : {}),
+              stream: false // Ensure non-streaming for simpler handling
         })
       });
 
@@ -279,7 +280,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error('AI request timed out after 50 seconds');
+        throw new Error('AI request timed out after 15 seconds');
     }
     throw err;
   }
@@ -311,7 +312,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-      throw new Error('AI retry request timed out after 50 seconds');
+        throw new Error('AI retry request timed out after 15 seconds');
     }
     throw err;
   }
