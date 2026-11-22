@@ -154,7 +154,7 @@ Rules:
 - dueDate must be YYYY-MM-DD or null
 - confidence 0.0-1.0
 - weight 1-5, difficulty 1-5, mastery 0.0-1.0
-- sourceSnippet: exact quote from input text`;`;
+- sourceSnippet: exact quote from input text`;
 
   try {
     const data = await callAIWithValidation({
