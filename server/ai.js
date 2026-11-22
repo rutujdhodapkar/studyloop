@@ -27,7 +27,7 @@ export function stripFences(text) {
  */
 async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout for faster failover
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout to fit Vercel 10s limit
 
   try {
     // 1. Groq Provider (keys starting with gsk_)
@@ -138,7 +138,7 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
               content: userPrompt
             }
           ],
-              max_tokens: 800, // Reduced for speed
+              max_tokens: 1200, // Allow room for JSON output
               temperature: 0.1,
               ...(isNemotron ? { top_p: 0.95 } : {}),
               stream: false // Ensure non-streaming for simpler handling
