@@ -115,6 +115,10 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
     // 2. NVIDIA NIM Provider (keys starting with nvapi-)
     if (apiKey.startsWith('nvapi-')) {
       const normalizedModel = model.includes('/') ? model : `nvidia/${model}`;
+          const isNemotron = normalizedModel.toLowerCase().includes('nemotron');
+      
+          const systemContent = `${systemPrompt}\n\nIMPORTANT: Return ONLY valid JSON with no markdown code fences, no reasoning text, no conversational explanation, and no extra commentary. The entire response must be a single valid JSON object.`;
+
       const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -127,7 +131,7 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
           messages: [
             {
               role: 'system',
-              content: `${systemPrompt}\n\nIMPORTANT: Return ONLY valid JSON with no markdown code fences and no conversational explanation.`
+                  content: systemContent
             },
             {
               role: 'user',
@@ -135,7 +139,8 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
             }
           ],
           max_tokens: 1500,
-          temperature: 0.2
+              temperature: 0.1,
+              ...(isNemotron ? { top_p: 0.95 } : {})
         })
       });
 
@@ -150,7 +155,16 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
 
       const data = await response.json();
       const messageObj = data.choices?.[0]?.message;
-      const content = messageObj?.content || messageObj?.reasoning_content;
+          let content = messageObj?.content || messageObj?.reasoning_content || '';
+      
+          // For Nemotron models, strip reasoning tags if present
+          if (isNemotron && content) {
+            // Remove <think>...</think> or similar reasoning blocks
+            content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            // Remove any leading reasoning-like text
+            content = content.replace(/^(?:We need to|Let me|Here is|The JSON|Here's the).*?[\n\r]/i, '').trim();
+          }
+      
       if (!content) {
         throw new Error('NVIDIA provider returned empty choice response');
       }

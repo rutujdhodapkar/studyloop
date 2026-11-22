@@ -219,7 +219,11 @@ export default function Insights({
 
       {loading ? (
         <div className="placeholder-box" aria-busy="true">
-          <div className="spinner" aria-hidden="true" style={{ borderColor: '#1d4ed8', borderTopColor: 'transparent', width: 32, height: 32 }} />
+                <div className="loading-dots" aria-hidden="true" style={{ color: '#1d4ed8' }}>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                </div>
           <p className="muted-text" style={{ marginTop: '1rem' }}>
             Classifying mistakes & recalibrating study engine for <strong>{activeTopic.name}</strong>...
           </p>

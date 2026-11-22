@@ -229,7 +229,11 @@ export default function Quiz({
       {/* LOADING STATE */}
       {loading ? (
         <div className="placeholder-box" aria-busy="true">
-          <div className="spinner" aria-hidden="true" style={{ borderColor: '#2563eb', borderTopColor: 'transparent', width: 28, height: 28 }} />
+                <div className="loading-dots" aria-hidden="true" style={{ color: '#2563eb' }}>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                  <span className="dot"></span>
+                </div>
           <p className="muted-text" style={{ marginTop: '1rem' }}>
             Generating 5 active-recall questions for <strong>{topic.name}</strong>...
           </p>

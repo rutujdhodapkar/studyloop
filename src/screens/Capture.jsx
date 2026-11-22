@@ -1,11 +1,11 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { SAMPLE_RAW_TEXT } from '../data/sample.js';
 import { extractFromText } from '../api.js';
 
 const LOADING_STAGES = [
-  { text: 'thinking', minDelay: 300, maxDelay: 1000 },
-  { text: 'reasoning', minDelay: 300, maxDelay: 1000 },
-  { text: 'finalizing output', minDelay: 300, maxDelay: 1000 }
+  { text: 'analyzing syllabus…', minDelay: 200, maxDelay: 500 },
+  { text: 'extracting deadlines…', minDelay: 200, maxDelay: 500 },
+  { text: 'building study plan…', minDelay: 200, maxDelay: 500 }
 ];
 
 function getRandomDelay(min, max) {
@@ -224,8 +224,12 @@ export default function Capture({
               >
                 {loading ? (
                   <>
-                    <span className="spinner" aria-hidden="true"></span>
-                                <span>{loadingText || 'Extracting deadlines...'}</span>
+                                <span className="loading-dots" aria-hidden="true">
+                                  <span className="dot"></span>
+                                  <span className="dot"></span>
+                                  <span className="dot"></span>
+                                </span>
+                                <span className="loading-text">{loadingText || 'Extracting deadlines…'}</span>
                   </>
                 ) : (
                   <span>Analyse & Extract Deadlines &rarr;</span>
