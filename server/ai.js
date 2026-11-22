@@ -280,7 +280,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-        throw new Error('AI request timed out after 15 seconds');
+          throw new Error('AI request timed out after 8 seconds');
     }
     throw err;
   }
@@ -312,7 +312,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-        throw new Error('AI retry request timed out after 15 seconds');
+          throw new Error('AI retry request timed out after 8 seconds');
     }
     throw err;
   }
