@@ -1,6 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { SAMPLE_RAW_TEXT } from '../data/sample.js';
 import { extractFromText } from '../api.js';
+
+const LOADING_STAGES = [
+  { text: 'thinking', minDelay: 300, maxDelay: 1000 },
+  { text: 'reasoning', minDelay: 300, maxDelay: 1000 },
+  { text: 'finalizing output', minDelay: 300, maxDelay: 1000 }
+];
+
+function getRandomDelay(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
 export default function Capture({
   initialText = '',
@@ -16,13 +26,28 @@ export default function Capture({
     typeof initialSettings.hoursPerDay === 'number' ? initialSettings.hoursPerDay : 2
   );
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [loadingText, setLoadingText] = useState('');
   const [error, setError] = useState(null);
   const [localBanner, setLocalBanner] = useState(apiBanner);
+  const loadingTimeoutRef = useRef(null);
 
   const handleLoadSample = () => {
     setText(SAMPLE_RAW_TEXT.trim());
     setError(null);
   };
+
+  const runLoadingSequence = useCallback(async () => {
+    for (let i = 0; i < LOADING_STAGES.length; i++) {
+      const stage = LOADING_STAGES[i];
+      setLoadingStage(i);
+      setLoadingText(stage.text);
+      const delay = getRandomDelay(stage.minDelay, stage.maxDelay);
+      await new Promise(resolve => {
+        loadingTimeoutRef.current = setTimeout(resolve, delay);
+      });
+    }
+  }, []);
 
   const handleAnalyse = async (e) => {
     e.preventDefault();
@@ -32,10 +57,17 @@ export default function Capture({
     }
 
     setLoading(true);
+    setLoadingStage(0);
+    setLoadingText('');
     setError(null);
+
+    // Start the loading sequence in background
+    const loadingPromise = runLoadingSequence();
 
     try {
       const result = await extractFromText({ text, today });
+      // Wait for loading sequence to complete (or at least finish current stage)
+      await loadingPromise;
       setLocalBanner(result.banner);
 
       if (onAnalyzed) {
@@ -51,7 +83,12 @@ export default function Capture({
     } catch (err) {
       setError(`Extraction failed: ${err.message}`);
     } finally {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
       setLoading(false);
+      setLoadingStage(0);
+      setLoadingText('');
     }
   };
 
@@ -188,7 +225,7 @@ export default function Capture({
                 {loading ? (
                   <>
                     <span className="spinner" aria-hidden="true"></span>
-                    <span>Extracting deadlines...</span>
+                                <span>{loadingText || 'Extracting deadlines...'}</span>
                   </>
                 ) : (
                   <span>Analyse & Extract Deadlines &rarr;</span>
