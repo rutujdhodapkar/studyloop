@@ -8,10 +8,10 @@ import Quiz from './screens/Quiz.jsx';
 import Insights from './screens/Insights.jsx';
 import { loadStoredState, saveStoredState, clearStoredState } from './store.js';
 
-const INITIAL_SETTINGS = {
+const getInitialSettings = () => ({
   today: new Date().toISOString().split('T')[0],
   hoursPerDay: 2
-};
+});
 
 export default function App() {
   // Restore persisted state from localStorage on startup
@@ -22,7 +22,7 @@ export default function App() {
     return {
       currentStep: 0,
       rawText: '',
-      settings: INITIAL_SETTINGS,
+      settings: getInitialSettings(),
       deadlines: [],
       topics: [],
       warnings: [],
@@ -61,7 +61,7 @@ export default function App() {
     setAppState({
       currentStep: 0,
       rawText: '',
-      settings: INITIAL_SETTINGS,
+        settings: getInitialSettings(),
       deadlines: [],
       topics: [],
       warnings: [],
