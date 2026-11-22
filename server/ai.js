@@ -27,7 +27,7 @@ export function stripFences(text) {
  */
 async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) {
   const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 9000); // 9s timeout to fit Vercel 10s limit
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout (Vercel Hobby max)
 
   try {
     // 1. Groq Provider (keys starting with gsk_)
@@ -138,7 +138,7 @@ async function sendProviderRequest({ apiKey, model, systemPrompt, userPrompt }) 
               content: userPrompt
             }
           ],
-              max_tokens: 1200, // Allow room for JSON output
+              max_tokens: 2000, // Allow room for JSON output + reasoning
               temperature: 0.1,
               ...(isNemotron ? { top_p: 0.95 } : {}),
               stream: false // Ensure non-streaming for simpler handling
@@ -280,7 +280,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-          throw new Error('AI request timed out after 9 seconds');
+          throw new Error('AI request timed out after 10 seconds');
     }
     throw err;
   }
@@ -312,7 +312,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
     });
   } catch (err) {
     if (err.name === 'AbortError') {
-          throw new Error('AI retry request timed out after 9 seconds');
+          throw new Error('AI retry request timed out after 10 seconds');
     }
     throw err;
   }
