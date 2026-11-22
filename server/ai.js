@@ -261,7 +261,7 @@ export async function callAIWithValidation({ systemPrompt, userPrompt, validator
   const defaultModel = apiKey.startsWith('gsk_')
     ? 'qwen/qwen3.8-27b'
     : apiKey.startsWith('nvapi-')
-        ? 'z-ai/glm-5.3-flash'
+        ? 'minimaxai/minimax-m3.1-flash'
     : 'gemini-2.0-flash';
   const model = process.env.AI_MODEL || defaultModel;
 
